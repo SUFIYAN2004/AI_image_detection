@@ -6,24 +6,24 @@ import numpy as np
 # 1. Page Configuration
 st.set_page_config(
     page_title="DetectAI | Neon Engine", 
-    page_icon="🆚", 
+    page_icon="🤖", 
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- DIRECT WIDGET TARGETING CSS ---
+# --- RESPONSIVE CSS STYLES ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
     
-    /* Global Gradient Background */
+    /* Global Background */
     .stApp { 
         background: radial-gradient(circle at top left, #1e2a4a, #0b0e14);
         font-family: 'JetBrains Mono', monospace !important; 
         color: #ffffff !important;
     }
 
-    /* Header Styling */
+    /* === DESKTOP STYLES (Base) === */
     .glow-text { 
         font-size: 3rem !important;
         font-weight: 800;
@@ -43,7 +43,7 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Input Section (Radio & Uploader merged seamlessly) */
+    /* Seamless Inputs (Desktop) */
     div[data-testid="stRadio"] { 
         background: rgba(255, 255, 255, 0.05); 
         backdrop-filter: blur(15px);
@@ -62,7 +62,7 @@ st.markdown("""
         margin-top: -1rem !important; 
     }
 
-    /* Button Alignment & Styling */
+    /* Gradient Buttons */
     .stButton { margin-top: -5px !important; }
     .stButton>button { 
         width: 100%; 
@@ -75,19 +75,9 @@ st.markdown("""
         font-size: 1.1rem;
         transition: 0.3s !important;
     }
-    .stButton>button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 0 20px rgba(79, 172, 254, 0.8);
-    }
+    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(79, 172, 254, 0.8); }
 
-    /* Image Display container styling */
-    div[data-testid="stImage"] {
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* Footer & Metrics */
+    /* Footer Metrics */
     .tech-footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 40px; }
     .tech-box { flex: 1; padding: 20px; border-radius: 15px; text-align: center; background: rgba(255, 255, 255, 0.03); }
     .neon-cnn { border-bottom: 3px solid #00ff88; box-shadow: 0 4px 15px -5px #00ff88; }
@@ -96,9 +86,36 @@ st.markdown("""
     .tech-label { font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
     .tech-value { font-size: 18px; font-weight: 700; color: white; }
 
-    /* Hide Streamlit Clutter */
+    /* Hide Clutter */
     footer {visibility: hidden;}
     [data-testid="stHeader"] {background: rgba(0,0,0,0);}
+
+
+    /* === MOBILE RESPONSIVE FIXES (Triggered below 768px width) === */
+    @media (max-width: 768px) {
+        /* Resize Headers for Mobile */
+        .glow-text { font-size: 2.2rem !important; }
+        .sub-text { font-size: 0.7rem !important; letter-spacing: 1px; margin-top: -5px !important; }
+        
+        /* Un-stick the Radio and Uploader inputs so they don't break */
+        div[data-testid="stRadio"] { 
+            border-radius: 15px !important; 
+            padding: 15px !important; 
+            margin-top: 5px !important; 
+        }
+        div[data-testid="stFileUploader"], div[data-testid="stCameraInput"] { 
+            border-radius: 15px !important; 
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important; /* Restore border */
+            padding: 15px !important; 
+            margin-top: 10px !important; /* Push down so it doesn't overlap */
+        }
+        
+        /* Stack the Footer Boxes Vertically */
+        .tech-footer { 
+            flex-direction: column !important; 
+            gap: 15px !important; 
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -121,7 +138,7 @@ except Exception:
 st.markdown('<h1 class="glow-text">DetectAI</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-text">NEURAL CLASSIFICATION INFRASTRUCTURE</p>', unsafe_allow_html=True)
 
-# 4. Seamless Input Layer
+# 4. Input Layer
 choice = st.radio("SOURCE", ["📂 Upload from Gallery", "📷 Use Live Camera"], horizontal=True, label_visibility="collapsed")
 
 if "Gallery" in choice:
@@ -129,7 +146,7 @@ if "Gallery" in choice:
 else:
     source = st.camera_input("CAMERA", label_visibility="collapsed")
 
-# 5. Analysis Layer (PERFECTLY ALIGNED)
+# 5. Analysis Layer
 if source is not None:
     raw_img = Image.open(source).convert("RGB")
     raw_img = ImageOps.exif_transpose(raw_img)
@@ -137,19 +154,16 @@ if source is not None:
     col_l, col_r = st.columns(2, gap="large")
     
     with col_l:
-        # Title for Left Column
         st.markdown('<p style="color: #00d2ff; font-size: 12px; font-weight: bold; margin-bottom: 5px;">SOURCE TENSOR FEED</p>', unsafe_allow_html=True)
         st.image(raw_img, use_container_width=True)
 
     with col_r:
-        # Title for Right Column (Aligns exactly with the left title)
         st.markdown('<p style="color: #bc13fe; font-size: 12px; font-weight: bold; margin-bottom: 5px;">INFERENCE CONTROL</p>', unsafe_allow_html=True)
         
         processed = raw_img.resize((32, 32))
         tensor = tf.keras.preprocessing.image.img_to_array(processed)
         tensor = np.expand_dims(tensor, axis=0).astype(np.float32)
 
-        # Button sits right under the title, matching the image height
         if st.button("INITIATE SCAN"):
             with st.spinner('Scanning manifolds...'):
                 interpreter.set_tensor(input_details[0]['index'], tensor)
@@ -161,7 +175,6 @@ if source is not None:
                 res_lbl = "AI GENERATED" if is_ai else "HUMAN AUTHENTIC"
                 conf = (1 - prediction if is_ai else prediction) * 100
 
-                # Result card logic separated cleanly
                 st.markdown(f"""
                     <div style="padding: 20px; text-align: center; margin-top: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);">
                         <h2 style="color: {res_col}; text-shadow: 0 0 10px {shadow}; margin: 0;">{res_lbl}</h2>
@@ -188,6 +201,6 @@ st.markdown(f"""
         </div>
     </div>
     <div style="text-align: center; margin-top: 30px; color: #777; font-size: 11px;">
-        V. Mohammed Sufiyan | C. Abdul Hakeem College (Autonomous) | BCA Final Year Project 2026
+    BCA Final Year Project 2026
     </div>
 """, unsafe_allow_html=True)
